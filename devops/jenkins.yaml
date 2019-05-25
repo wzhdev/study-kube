@@ -1,0 +1,6 @@
+Master:
+  AdminPassword: "123456"
+  HostName: jenkins.wzh
+  ServiceType: ClusterIP
+rbac:
+  install: true

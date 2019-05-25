@@ -1,0 +1,16 @@
+service:
+  gogs:
+    serverDomain: gogs.wzh
+    serverRootUrl: https://gogs.wzh
+    databaseHost: postgresql-postgresql.database
+    databaseUser: postgres
+    databasePassword: "123456"
+    databaseName: gogs
+  ingress:
+    enabled: true
+    hosts:
+      - gogs.wzh
+persistence:
+  size: 5Gi
+postgresql:
+  install: false

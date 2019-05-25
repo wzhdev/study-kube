@@ -1,0 +1,19 @@
+image:
+  repository: "elasticsearch/elasticsearch-oss"
+cluster:
+  env:
+    MINIMUM_MASTER_NODES: "2"
+client:
+  replicas: 1
+master:
+  replicas: 2
+data:
+  replicas: 2
+  heapSize: "512m"
+  persistence:
+    size: "5Gi"
+  resources:
+    limits:
+    requests:
+      cpu: "25m"
+      memory: "512Mi"

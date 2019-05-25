@@ -1,0 +1,1 @@
+kubeadm join 192.168.2.20:6443 --node-name node1 --token hl2uq5.1a1pzaptea0yra2m --discovery-token-ca-cert-hash sha256:39a74ee3441180f3e0fe681f933c22f94718caccf2c4d4f7e93a4804917247fe

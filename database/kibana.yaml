@@ -1,0 +1,18 @@
+image:
+  repository: "kibana/kibana-oss"
+files:
+  kibana.yml:
+    elasticsearch.url: http://elasticsearch-client:9200
+service:
+  externalPort: 80
+ingress:
+  enabled: true
+  hosts:
+    - kibana.wzh
+serviceAccount:
+  create: true
+plugins:
+  enabled: true
+persistentVolumeClaim:
+  enabled: true
+  size: "1Gi"

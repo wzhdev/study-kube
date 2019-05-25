@@ -1,0 +1,7 @@
+ingress:
+  enabled: true
+  hosts:
+    - docker.wzh
+persistence:
+  enabled: true
+  size: 5Gi

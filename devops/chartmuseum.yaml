@@ -1,0 +1,14 @@
+env:
+  open:
+    DISABLE_API: false
+    ALLOW_OVERWRITE: true
+serviceAccount:
+  create: true
+persistence:
+  enabled: true
+  size: 4Gi
+ingress:
+  enabled: true
+  hosts:
+    chart.wzh:
+      - /
