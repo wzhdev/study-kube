@@ -1,0 +1,4 @@
+image:
+  repository: google-containers/fluentd-elasticsearch
+elasticsearch:
+  host: 'elasticsearch-client.database'

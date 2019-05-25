@@ -1,0 +1,10 @@
+ingress:
+  enabled: true
+  hosts:
+    - grafana.wzh
+persistence:
+  enabled: true
+  accessModes:
+    - ReadWriteOnce
+  size: 2Gi
+adminPassword: "123456"

@@ -1,0 +1,10 @@
+alertmanager:
+  ingress:
+    enabled: true
+    hosts:
+      - alertmanager.wzh
+server:
+  ingress:
+    enabled: true
+    hosts:
+      - prometheus.wzh
