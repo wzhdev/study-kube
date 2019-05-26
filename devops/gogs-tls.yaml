@@ -1,0 +1,14 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: gogs-ingress-cert
+spec:
+  secretName: gogs-tls
+  issuerRef:
+    name: ca-issuer
+    kind: ClusterIssuer
+  commonName: git.wzh
+  organization:
+  - git.wzh
+  dnsNames:
+  - git.wzh

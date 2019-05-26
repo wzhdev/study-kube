@@ -1,2 +1,4 @@
+image:
+  registry: docker.wzh
 postgresqlPassword: "123456"
 postgresqlDatabase: gogs

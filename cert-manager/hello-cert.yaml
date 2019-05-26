@@ -1,0 +1,15 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: hello
+spec:
+  secretName: hello-wzh-tls
+  issuerRef:
+    name: ca-issuer
+    kind: ClusterIssuer
+  commonName: hello.wzh
+  organization:
+  - kube.wzh
+  dnsNames:
+  - hello.wzh
+  - www.hello.wzh

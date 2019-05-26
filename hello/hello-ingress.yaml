@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: hello
+  annotations:
+    certmanager.k8s.io/cluster-issuer: ca-issuer
+spec:
+  tls:
+  - hosts:
+    - hello.wzh
+    secretName: hello-tls
+  rules:
+  - host: hello.wzh
+  - http:
+      paths:
+      - backend:
+          serviceName: hello
+          servicePort: 80
