@@ -1,11 +1,11 @@
 ## Default values for Traefik
 image: traefik
-imageTag: 1.7.6
+imageTag: 1.7.9
 ## can switch the service type to NodePort if required
 serviceType: LoadBalancer
 # loadBalancerIP: ""
 # loadBalancerSourceRanges: []
-externalIP: 192.168.1.21
+externalIP: 192.168.1.111
 whiteListSourceRange: []
 externalTrafficPolicy: Cluster
 replicas: 1
@@ -17,20 +17,23 @@ podDisruptionBudget: {}
   # maxUnavailable: 1
   # minAvailable: 2
 
+# priorityClassName: ""
+
 # rootCAs: []
 
-cpuRequest: 100m
-memoryRequest: 30Mi
-cpuLimit: 100m
-memoryLimit: 50Mi
+resources: {}
+
 debug:
-  enabled: true
+  enabled: false
 
 deploymentStrategy: {}
   # rollingUpdate:
   #   maxSurge: 1
   #   maxUnavailable: 0
   # type: RollingUpdate
+
+securityContext: {}
+env: {}
 
 nodeSelector:
   node-role.kubernetes.io/edge: ''
@@ -42,15 +45,15 @@ tolerations: []
 #   value: "value"
 #   effect: "NoSchedule|PreferNoSchedule|NoExecute(1.6 only)"
 ## Kubernetes ingress filters
-# kubernetes:
+kubernetes:
   # endpoint:
   # namespaces:
   # - default
   # labelSelector:
   # ingressClass:
-  # ingressEndpoint:
+  ingressEndpoint:
   #   hostname: "localhost"
-  #   ip: "127.0.0.1"
+    ip: "192.168.1.111"
   #   publishedService: "namespace/servicename"
   #   useDefaultPublishedService: false
 proxyProtocol:
@@ -63,18 +66,41 @@ forwardedHeaders:
   # trustedIPs is required when enabled
   trustedIPs: []
   # - 10.0.0.0/8
+
+## Add arbitrary ConfigMaps to deployment
+## Will be mounted to /configs/, i.e. myconfig.json would
+## be mounted to /configs/myconfig.json.
+configFiles: {}
+  # myconfig.json: |
+  #   filecontents...
+
+## Add arbitrary Secrets to deployment
+## Will be mounted to /secrets/, i.e. file.name would
+## be mounted to /secrets/mysecret.txt.
+## The contents will be base64 encoded when added
+secretFiles: {}
+  # mysecret.txt: |
+  #   filecontents...
+
 ssl:
   enabled: true
   enforced: true
   permanentRedirect: true
   upstream: false
   insecureSkipVerify: true
+  generateTLS: false
+  # defaultCN: "*.kube"
+    # or *.example.com
+  defaultSANList:
+    #- example.com
+  defaultIPList: []
+    # - 1.2.3.4
   # cipherSuites: []
   # https://docs.traefik.io/configuration/entrypoints/#specify-minimum-tls-version
   # tlsMinVersion: VersionTLS12
+  # Basic auth to protect all the routes. Can use htpasswd to generate passwords
   defaultCert: Q2VydGlmaWNhdGU6CiAgICBEYXRhOgogICAgICAgIFZlcnNpb246IDMgKDB4MikKICAgICAgICBTZXJpYWwgTnVtYmVyOiAwICgweDApCiAgICBTaWduYXR1cmUgQWxnb3JpdGhtOiBzaGEyNTZXaXRoUlNBRW5jcnlwdGlvbgogICAgICAgIElzc3VlcjogQz1DTiwgU1Q9R3VhbmdEb25nLCBMPVNoZW5aaGVuLCBPPXd6aCwgT1U9Y2EsIENOPWNhLnd6aC9lbWFpbEFkZHJlc3M9d3poX2RldkAxNjMuY29tCiAgICAgICAgVmFsaWRpdHkKICAgICAgICAgICAgTm90IEJlZm9yZTogRGVjIDI1IDE0OjM2OjEwIDIwMTggR01UCiAgICAgICAgICAgIE5vdCBBZnRlciA6IERlYyAyNSAxNDozNjoxMCAyMDE5IEdNVAogICAgICAgIFN1YmplY3Q6IEM9Q04sIFNUPUd1YW5nRG9uZywgTz13emgsIE9VPWt1YmUsIENOPWt1YmUud3poL2VtYWlsQWRkcmVzcz13emhfZGV2QDE2My5jb20KICAgICAgICBTdWJqZWN0IFB1YmxpYyBLZXkgSW5mbzoKICAgICAgICAgICAgUHVibGljIEtleSBBbGdvcml0aG06IHJzYUVuY3J5cHRpb24KICAgICAgICAgICAgICAgIFB1YmxpYy1LZXk6ICgyMDQ4IGJpdCkKICAgICAgICAgICAgICAgIE1vZHVsdXM6CiAgICAgICAgICAgICAgICAgICAgMDA6Y2I6ZDk6OTI6ZDE6NTA6ZmI6YzE6ZjY6Njc6MmY6ZmE6MWM6NzA6NzI6CiAgICAgICAgICAgICAgICAgICAgMmY6ZDA6MDA6OTE6YTg6M2E6YWE6YTY6YjQ6YzM6NDc6OTQ6ZjY6Mjc6MmI6CiAgICAgICAgICAgICAgICAgICAgNzQ6NzI6YzQ6NDQ6ODE6YzE6NTI6YTA6Nzc6YjE6NWQ6OTg6YjY6MjU6M2M6CiAgICAgICAgICAgICAgICAgICAgMmQ6ODQ6ZGU6YTU6MWQ6OGM6MDk6MDU6OGM6M2Y6ZWE6OGM6MGM6ZmU6YWE6CiAgICAgICAgICAgICAgICAgICAgZmI6YjA6ZmU6ODg6YmY6NjQ6MDU6MzM6MjA6N2I6ZTA6Nzg6M2I6ODk6MTc6CiAgICAgICAgICAgICAgICAgICAgZWU6MzQ6YzU6OGI6YjA6ZTg6MGM6MWI6MjE6NGE6Mzc6ZTg6ZWQ6OTk6N2Y6CiAgICAgICAgICAgICAgICAgICAgZGI6MmY6Mzk6Y2Y6NWY6Mzk6N2U6ZGE6ZjI6NjI6NDc6OTY6Y2U6YTY6MzU6CiAgICAgICAgICAgICAgICAgICAgZWU6ZmY6ZWI6NTk6ODU6NDA6M2Q6YmI6ZDY6YTM6M2Q6ZDc6ZTc6YTg6ZTU6CiAgICAgICAgICAgICAgICAgICAgMGU6NjY6NDU6MTU6Mjg6YmQ6YTM6NjU6ZmY6MmU6YmQ6MzY6OWU6ZDE6OGY6CiAgICAgICAgICAgICAgICAgICAgNzY6NzM6ZWQ6YTk6MmI6YjI6MTU6YTQ6ZjY6ZDQ6ZDQ6M2U6ZDg6YWQ6M2Y6CiAgICAgICAgICAgICAgICAgICAgNTg6NmI6ZmQ6NzI6Y2I6MmQ6NDU6YTc6YWU6MTg6Njc6MTI6N2M6M2E6OTc6CiAgICAgICAgICAgICAgICAgICAgZjI6NzA6ZmM6MGE6YzU6YzQ6N2U6MTc6YWY6N2I6MzY6ZDE6ZTI6ZTI6NGQ6CiAgICAgICAgICAgICAgICAgICAgNWU6YmU6YzM6NTQ6MDE6Mjk6MWI6Y2I6YmQ6N2Y6N2M6MmE6OGQ6NGE6MjU6CiAgICAgICAgICAgICAgICAgICAgM2Y6NzM6NDU6ZWE6YWM6ZDE6Yjc6M2I6MzY6MGU6YmY6MmI6NTc6MDY6MjU6CiAgICAgICAgICAgICAgICAgICAgNjE6Y2Y6N2U6MDI6MDM6OTE6M2I6ZGM6MTQ6OWY6ODY6NGM6MTM6M2M6MWQ6CiAgICAgICAgICAgICAgICAgICAgNWY6YTQ6NGU6MjU6ZGE6YzY6MjU6YzU6ZmQ6NGU6YjU6ZjU6MjE6NjI6NTQ6CiAgICAgICAgICAgICAgICAgICAgZTk6MjM6ZTc6MDI6NDQ6ZTk6MzU6ZmE6MWU6ZDk6NGI6ZmQ6MTY6NDA6NmY6CiAgICAgICAgICAgICAgICAgICAgODU6ZjUKICAgICAgICAgICAgICAgIEV4cG9uZW50OiA2NTUzNyAoMHgxMDAwMSkKICAgICAgICBYNTA5djMgZXh0ZW5zaW9uczoKICAgICAgICAgICAgWDUwOXYzIEJhc2ljIENvbnN0cmFpbnRzOiAKICAgICAgICAgICAgICAgIENBOkZBTFNFCiAgICAgICAgICAgIFg1MDl2MyBLZXkgVXNhZ2U6IAogICAgICAgICAgICAgICAgRGlnaXRhbCBTaWduYXR1cmUsIE5vbiBSZXB1ZGlhdGlvbiwgS2V5IEVuY2lwaGVybWVudAogICAgICAgICAgICBYNTA5djMgU3ViamVjdCBBbHRlcm5hdGl2ZSBOYW1lOiAKICAgICAgICAgICAgICAgIEROUzprdWJlLnd6aCwgRE5TOnByb21ldGhldXMud3poLCBETlM6YWxlcnRtYW5hZ2VyLnd6aCwgRE5TOmdyYWZhbmEud3poLCBETlM6a2liYW5hLnd6aCwgRE5TOmphZWdlci53emgsIEROUzpoYXJib3Iud3poLCBETlM6bm90YXJ5Lnd6aCwgRE5TOmplbmtpbnMud3poLCBETlM6Z29ncy53emgsIEROUzp0cmFlZmlrLnd6aCwgRE5TOmFwcC53emgsIEROUzpkb2NrZXIud3poLCBETlM6Y2hhcnQud3poLCBETlM6Ki53emgKICAgIFNpZ25hdHVyZSBBbGdvcml0aG06IHNoYTI1NldpdGhSU0FFbmNyeXB0aW9uCiAgICAgICAgIDIwOjE5OmI0OmY1OmIzOjI2OjAxOjUwOjBjOmVmOmI3Ojk0OjFlOmYyOjA4OjhjOmM5OmRmOgogICAgICAgICA4Mzo5ODplYzpjOTo4ZTpmMjo5NDpmOTpkODphOTo0Nzo4ZTpiZTpiMjo2NTo2MzozMzpjODoKICAgICAgICAgNWU6YjY6MGE6Yzg6NzE6Njk6YTI6MzQ6Zjg6YTM6Zjk6YWQ6Mjc6NWE6YTY6Yzg6MGY6NDM6CiAgICAgICAgIGYyOjE3OjA3OmE3OjQ3Ojk4OmU3OjgxOjcwOjkzOjg4OjY3OmZlOjQ1OjY4Ojg4OjhhOjNhOgogICAgICAgICBlMzowMjo4Mjo1MTpiNzo4MDowYTphYzoyYTplNDo5ZjowMjoxOTpmMzo3ZjpiMDphOTo3NDoKICAgICAgICAgYWE6Zjk6MmY6NzI6Yjk6Yjc6MmU6MWI6NTY6MWU6Yjg6YTI6N2Q6ZDY6NWY6YTc6OWM6ZTM6CiAgICAgICAgIDc1OjY0OjRmOmRhOjE1OmU5OmY5OmIwOjE1OmJkOmIzOjJmOmZiOjMwOmEyOmNjOmEwOmMxOgogICAgICAgICAwZTo5OTowNToyNjphNzpkMTo0ZDpmMzo3Nzo2MDo1ZjoyNTo0MjoyYTpmZTpmZjplMTphYjoKICAgICAgICAgMjE6YmY6MDU6MDY6ZWI6ZDA6ZGU6MTM6ZDQ6OWE6NjM6OTE6OGU6ZDY6Njc6NzM6OTQ6NWI6CiAgICAgICAgIDk4OjdmOmM5OmZkOjY5OmM1OjE4OjljOjFlOmViOmFlOjA3OmVhOjI4OjhiOmVhOjg0OmRlOgogICAgICAgICBlZToxYTo0NDoxMDowMTo2Zjo0YTo1OTphYTphNjpmNjphZjpkMjoxYjpkYjphODoyMTpmMDoKICAgICAgICAgNWY6MWE6NmE6ODY6MTA6YjA6NDk6MzM6MjA6ZmE6N2E6NWE6OWE6ODI6MjA6Y2I6ZmI6ZTE6CiAgICAgICAgIDQ3OjlhOmVjOmVkOjhhOjZlOjBjOjg0OjFmOjBmOmRmOjc5OjAzOjliOjM3OjhlOmExOjEyOgogICAgICAgICAyMzpiMzowZDo1MTpkMjplNzpjMzo0MTpmNTo0YzoyMDo5ZToyNDpmMjozOToxNDpmMzpkNjoKICAgICAgICAgYzM6NTM6ZjA6YmYKLS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVTekNDQXpPZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBRENCZ0RFTE1Ba0dBMVVFQmhNQ1EwNHgKRWpBUUJnTlZCQWdNQ1VkMVlXNW5SRzl1WnpFUk1BOEdBMVVFQnd3SVUyaGxibHBvWlc0eEREQUtCZ05WQkFvTQpBM2Q2YURFTE1Ba0dBMVVFQ3d3Q1kyRXhEekFOQmdOVkJBTU1CbU5oTG5kNmFERWVNQndHQ1NxR1NJYjNEUUVKCkFSWVBkM3BvWDJSbGRrQXhOak11WTI5dE1CNFhEVEU0TVRJeU5URTBNell4TUZvWERURTVNVEl5TlRFME16WXgKTUZvd2NURUxNQWtHQTFVRUJoTUNRMDR4RWpBUUJnTlZCQWdNQ1VkMVlXNW5SRzl1WnpFTU1Bb0dBMVVFQ2d3RApkM3BvTVEwd0N3WURWUVFMREFScmRXSmxNUkV3RHdZRFZRUUREQWhyZFdKbExuZDZhREVlTUJ3R0NTcUdTSWIzCkRRRUpBUllQZDNwb1gyUmxka0F4TmpNdVkyOXRNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUIKQ2dLQ0FRRUF5OW1TMFZEN3dmWm5ML29jY0hJdjBBQ1JxRHFxcHJURFI1VDJKeXQwY3NSRWdjRlNvSGV4WFppMgpKVHd0aE42bEhZd0pCWXcvNm93TS9xcjdzUDZJdjJRRk15Qjc0SGc3aVJmdU5NV0xzT2dNR3lGS04ranRtWC9iCkx6blBYemwrMnZKaVI1Yk9walh1Lyt0WmhVQTl1OWFqUGRmbnFPVU9aa1VWS0wyalpmOHV2VGFlMFk5MmMrMnAKSzdJVnBQYlUxRDdZclQ5WWEvMXl5eTFGcDY0WVp4SjhPcGZ5Y1B3S3hjUitGNjk3TnRIaTRrMWV2c05VQVNrYgp5NzEvZkNxTlNpVS9jMFhxck5HM096WU92eXRYQmlWaHozNENBNUU3M0JTZmhrd1RQQjFmcEU0bDJzWWx4ZjFPCnRmVWhZbFRwSStjQ1JPazEraDdaUy8wV1FHK0Y5UUlEQVFBQm80SGRNSUhhTUFrR0ExVWRFd1FDTUFBd0N3WUQKVlIwUEJBUURBZ1hnTUlHL0JnTlZIUkVFZ2Jjd2diU0NDR3QxWW1VdWQzcG9nZzV3Y205dFpYUm9aWFZ6TG5kNgphSUlRWVd4bGNuUnRZVzVoWjJWeUxuZDZhSUlMWjNKaFptRnVZUzUzZW1pQ0NtdHBZbUZ1WVM1M2VtaUNDbXBoClpXZGxjaTUzZW1pQ0NtaGhjbUp2Y2k1M2VtaUNDbTV2ZEdGeWVTNTNlbWlDQzJwbGJtdHBibk11ZDNwb2dnaG4KYjJkekxuZDZhSUlMZEhKaFpXWnBheTUzZW1pQ0IyRndjQzUzZW1pQ0NtUnZZMnRsY2k1M2VtaUNDV05vWVhKMApMbmQ2YUlJRktpNTNlbWd3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUNBWnRQV3pKZ0ZRRE8rM2xCN3lDSXpKCjM0T1k3TW1POHBUNTJLbEhqcjZ5WldNenlGNjJDc2h4YWFJMCtLUDVyU2RhcHNnUFEvSVhCNmRIbU9lQmNKT0kKWi81RmFJaUtPdU1DZ2xHM2dBcXNLdVNmQWhuemY3Q3BkS3I1TDNLNXR5NGJWaDY0b24zV1g2ZWM0M1ZrVDlvVgo2Zm13RmIyekwvc3dvc3lnd1E2WkJTYW4wVTN6ZDJCZkpVSXEvdi9ocXlHL0JRYnIwTjRUMUpwamtZN1daM09VClc1aC95ZjFweFJpY0h1dXVCK29vaStxRTN1NGFSQkFCYjBwWnFxYjJyOUliMjZnaDhGOGFhb1lRc0VreklQcDYKV3BxQ0lNdjc0VWVhN08yS2JneUVIdy9mZVFPYk40NmhFaU96RFZIUzU4TkI5VXdnbmlUeU9SVHoxc05UOEw4PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
   defaultKey: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBeTltUzBWRDd3ZlpuTC9vY2NISXYwQUNScURxcXByVERSNVQySnl0MGNzUkVnY0ZTCm9IZXhYWmkySlR3dGhONmxIWXdKQll3LzZvd00vcXI3c1A2SXYyUUZNeUI3NEhnN2lSZnVOTVdMc09nTUd5RksKTitqdG1YL2JMem5QWHpsKzJ2SmlSNWJPcGpYdS8rdFpoVUE5dTlhalBkZm5xT1VPWmtVVktMMmpaZjh1dlRhZQowWTkyYysycEs3SVZwUGJVMUQ3WXJUOVlhLzF5eXkxRnA2NFlaeEo4T3BmeWNQd0t4Y1IrRjY5N050SGk0azFlCnZzTlVBU2tieTcxL2ZDcU5TaVUvYzBYcXJORzNPellPdnl0WEJpVmh6MzRDQTVFNzNCU2Zoa3dUUEIxZnBFNGwKMnNZbHhmMU90ZlVoWWxUcEkrY0NST2sxK2g3WlMvMFdRRytGOVFJREFRQUJBb0lCQVFDclJpdHRZeldrU250NApmQlRaQlpmV2xDUE56VDBFeEd3dkFLR3hWM21IMUJBYlZXc3ZHR0lWMmZGd1o1ZDNRL3BIVVJsalordHNEaS84CjZYeC93ZHp6c2Y0TWJ3YW1HMThxV01qejNlYjR4SDhuYkZrSGtOWFJXdk8yUWtSU0plVEg0VTlpQnZ1cCt6Yk0KSDlvZmMxSnJPSFAveWlBQ2NESWhDM296dU9KSkZ4Y3JiVlBjRnZxd2ltQ0ZRNm9xQUpCUWtqK1hFekdQN1VZWQpvdVZPYk8vV3dmbkNVZ2lxYThnQ214TUo5Q0x5czB0UzBBRmtQQUN5NWx6QVVMWTNubXoxNXpPRDQ2ZDZOUUlHClhNNVFRMWZyV2VEcG9qNk9EblFYTmhJQ0FkaGgzSC8yODAyN3ZmWFQwYitnc0pobWo3d2lJelpMMkdmWUU5QSsKcHhENXYyVWhBb0dCQU9lN015bVZoUktaRk9mNVBqUEZzTjlCdStXVVFJVlIzZGdGOWgwd2wyUThYdlh1M2JLMgpGbzlGRFlLR0F2dlNlN0Y1MlBqZE5lVGhJaHVaYVFjVzJCMDVZYVdDQW02cWxtVGNxZTc3ZlZWbXZxS3hNb3NLCkQ0VFpURUp5dWswZnhIR0VBVmpXdzJ6NTZVYWZMYUlwRVlhUk9ZaUd4dXptR1pGZUQyWnlpSWhUQW9HQkFPRXkKM1VPVFBzTjdBNFdVQnlIa2JqRUFaN2s0RTIwM05yOXoxUmJuWnNCWlZUemJUL2x6blNGdHUySG1xZklaejFjTwpaUTRNYVRqbkZzODRMbHF0VG1aTS8xMHhGejhGb2ZSNmNwWi9ra3Z3eFg2bGVocWZjRjk0SGVicDVTL1ZYRHRjCk0rOGdUQ0k3TnBGay9zeEtxMEMzOHJvZzJiUmd4U2laOHg1Z0pNK1hBb0dBWHNMK3VSS2J5Rzh4VFd0dk5GeXoKWjVqSjdhZ2llbUp3QmRicVBpV1F3enlzMklWRnc3OFNtcVB5VWwzYStuK29kWHNPYnphR3c0SU5JSndyaHVxZwpsZExSUzQxTzBWS1JEYzN1Ny91SDFWU2V3SWtWMGlYYkVzaUpsdUt6ckxaQTd1cThZa2Z3d3ErdjVXRlNsKzJUCmJTUVdFdTZLaW5YT0h0UUlHQ3plQ0dFQ2dZQVV3OWJwTXp1WFZORjNVTFh6cHhlT0J5YUpTcVZuN2E1cnF1ZWMKTEF3cWNsSk13VUEzbFRTSTc1QldyNms5L0tsRXNyd1l0b1pCUy9XcmQ5ZTJYc0thNWtDcHZDd1RrSlpsYjZELwpSWlljMEgrMWROYTBlNzBsNEhLSlowbk54bE94Mllla1pnci9JUXlnRFhyOUpXbHpGME1YYkk0R2R1SFhJNUxxCld4MHAwd0tCZ1FDU0JiOEtMZlRkNXJjVVlMZnhyZnJuam90TzZWZElIY3NycnplMjcxQVlPYlp5MSsyM3R5YWMKc1kvZmNEak5HVUVhWTl1c1k3c244VWlHUmdNVUUxcjY4MCtiRFJHYlNvdGRWbzdVQzFJaU42ZUtwK21DaGdCMAovaUZCbCtmR3NjVDJDa0ZkcDVTNTNyZWFvS0I2NW5vOEZPc3RxL0hZZUIrdzh0b0txeCtWREE9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
-  # Basic auth to protect all the routes. Can use htpasswd to generate passwords
   # > htpasswd -n -b testuser testpass
   # > testuser:$apr1$JXRA7j2s$LpVns9vsme8FHN0r.aSt11
   auth: {}
@@ -165,6 +191,9 @@ acme:
   ## Configure dnsProvider to perform domain verification using dns challenge
   ## Applicable only if using the dns-01 challenge type
   delayBeforeCheck: 0
+  resolvers: []
+    # - 1.1.1.1:53
+    # - 8.8.8.8:53
   dnsProvider:
     name: nil
     auroradns:
@@ -220,6 +249,11 @@ acme:
       OTC_PASSWORD: ""
       OTC_PROJECT_NAME: ""
       OTC_IDENTITY_ENDPOINT: ""
+    ovh:
+      OVH_ENDPOINT: ""
+      OVH_APPLICATION_KEY: ""
+      OVH_APPLICATION_SECRET: ""
+      OVH_CONSUMER_KEY: ""
     pdns:
       PDNS_API_URL: ""
     rackspace:
@@ -237,8 +271,10 @@ acme:
       AWS_SECRET_ACCESS_KEY: ""
     vultr:
       VULTR_API_KEY: ""
-  ## Save ACME certs to a persistent volume. WARNING: If you do not do this, you will re-request
-  ## certs every time a pod (re-)starts and you WILL be rate limited!
+  ## Save ACME certs to a persistent volume.
+  ## WARNING: If you do not do this and you did not have configured
+  ## a kvprovider, you will re-request certs every time a pod (re-)starts
+  ## and you WILL be rate limited!
   persistence:
     enabled: true
     annotations: {}
@@ -260,6 +296,7 @@ acme:
 dashboard:
   enabled: true
   domain: traefik.wzh
+  # serviceType: ClusterIP
   service: {}
     # annotations:
     #   key: value
@@ -268,6 +305,10 @@ dashboard:
     #   key: value
     # labels:
     #   key: value
+    # tls:
+      # - hosts:
+      #   - traefik.example.com
+      #   secretName: traefik-default-cert
   auth: {}
     # basic:
     #   username: password
@@ -339,6 +380,9 @@ deployment:
     httpEnabled: false
     httpsEnabled: false
     dashboardEnabled: false
+    # httpPort: 80
+    # httpsPort: 443
+    # dashboardPort: 8080
 sendAnonymousUsage: false
 tracing:
   enabled: false
@@ -358,3 +402,18 @@ tracing:
   #   localAgentHostPort: "127.0.0.1:8126"
   #   debug: false
   #   globalTag: ""
+
+## Create HorizontalPodAutoscaler object.
+##
+# autoscaling:
+#   minReplicas: 1
+#   maxReplicas: 10
+#   metrics:
+#   - type: Resource
+#     resource:
+#       name: cpu
+#       targetAverageUtilization: 60
+#   - type: Resource
+#     resource:
+#       name: memory
+#       targetAverageUtilization: 60
